@@ -112,8 +112,44 @@
 		fileInput.addEventListener('change', handleFile);
 
 		window.addEventListener( 'resize', onWindowResize );
+
+		// Handle file input change
+        const fileIn = document.getElementById('pcdFileInput');
+        fileInput.addEventListener('change', handleFileUpload);
 		}
 
+		function handleFileUpload(event) {
+        // Clear the scene before loading a new file
+        clearScene();
+
+        const fileInput = event.target;
+        const files = fileInput.files;
+
+        if (files.length > 0) {
+          const loader = new THREE.PCDLoader();
+
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            loader.load(URL.createObjectURL(file), function (points) {
+              points.geometry.center();
+              points.geometry.rotateX(Math.PI);
+              points.name = file.name;
+              scene.add(points);
+              render();
+            });
+          }
+        }
+      }
+
+      function clearScene() {
+        scene.children.forEach((child) => {
+          if (child instanceof THREE.Points) {
+            scene.remove(child);
+          }
+        });
+      }
+		
 		function handleFile(event) {
 		const file = event.target.files[0];
 
