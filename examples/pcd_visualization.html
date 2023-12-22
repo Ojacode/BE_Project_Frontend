@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+<<<<<<< HEAD
 	<head>
 		<title>three.js webgl - PCD</title>
 		<meta charset="utf-8">
@@ -11,92 +12,191 @@
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>
 			<a href="https://pointclouds.org/documentation/tutorials/pcd_file_format.html" target="_blank" rel="noopener">PCD File format</a>
 		</div> -->
+=======
+  <head>
+    <title>three.js webgl - PCD</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        overflow: hidden;
+        position: relative;
+      }
+>>>>>>> 9f0657c1f0bda939076f6bb19332624bd8d8f603
 
-		<script type="importmap">
-			{
-				"imports": {
-					"three": "../build/three.module.js",
-					"three/addons/": "./jsm/"
-				}
-			}
-		</script>
+      #info {
+        position: absolute;
+        top: 0;
+        width: 100%;
+        /* padding: 10px; */
+        background-color: #000000;
+        text-align: center;
+		color: aliceblue;
+      }
 
-		<script type="module">
+      #pcdFileInput {
+        display: none; /* Hide the default file input */
+      }
 
-			import * as THREE from 'three';
+      .custom-file-input {
+        position: absolute;
+        bottom: 30px;
+        right: 10px;
+        display: inline-block;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 10px;
+        border: 2px solid #3498db;
+        border-radius: 5px;
+        color: #3498db;
+      }
 
-			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-			import { PCDLoader } from 'three/addons/loaders/PCDLoader.js';
-			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+      .custom-file-input:hover {
+        background-color: #3498db;
+        color: white;
+      }
 
-			let camera, scene, renderer;
+      .custom-file-input:active {
+        background-color: #2980b9;
+        border-color: #2980b9;
+        color: white;
+      }
 
-			init();
+      .custom-file-label {
+        margin-left: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <div id="info">
+      <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>
+      <a href="https://pointclouds.org/documentation/tutorials/pcd_file_format.html" target="_blank" rel="noopener">PCD File format</a>
+    </div> -->
+	<div id="info">
+		<h4> Point Cloud Visualization</h4>
+	</div>
+    <!-- Add custom-styled file input -->
+    <label for="pcdFileInput" class="custom-file-input">
+      <span>Choose PCD File</span>
+      <input type="file" id="pcdFileInput" accept=".pcd">
+    </label>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "../build/three.module.js",
+          "three/addons/": "./jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      	import * as THREE from 'three';
+		import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+		import { PCDLoader } from 'three/addons/loaders/PCDLoader.js';
+		import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+		let camera, scene, renderer;
+
+		init();
+		// render(); // Don't call render here
+
+		function init() {
+
+		renderer = new THREE.WebGLRenderer( { antialias: true } );
+		renderer.setPixelRatio( window.devicePixelRatio );
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+
+		scene = new THREE.Scene();
+
+		camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.01, 40 );
+		camera.position.set( 0, 0, 1 );
+		scene.add( camera );
+
+		const controls = new OrbitControls( camera, renderer.domElement );
+		controls.addEventListener( 'change', render );
+		controls.minDistance = 0.5;
+		controls.maxDistance = 10;
+
+		// Add event listener for file input change
+		const fileInput = document.getElementById('pcdFileInput');
+		fileInput.addEventListener('change', handleFile);
+
+		window.addEventListener( 'resize', onWindowResize );
+
+		// Handle file input change
+        const fileIn = document.getElementById('pcdFileInput');
+        fileInput.addEventListener('change', handleFileUpload);
+		}
+
+		function handleFileUpload(event) {
+        // Clear the scene before loading a new file
+        clearScene();
+
+        const fileInput = event.target;
+        const files = fileInput.files;
+
+        if (files.length > 0) {
+          const loader = new THREE.PCDLoader();
+
+          for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            loader.load(URL.createObjectURL(file), function (points) {
+              points.geometry.center();
+              points.geometry.rotateX(Math.PI);
+              points.name = file.name;
+              scene.add(points);
+              render();
+            });
+          }
+        }
+      }
+
+      function clearScene() {
+        scene.children.forEach((child) => {
+          if (child instanceof THREE.Points) {
+            scene.remove(child);
+          }
+        });
+      }
+		
+		function handleFile(event) {
+		const file = event.target.files[0];
+
+		if (file) {
+			const loader = new PCDLoader();
+			loader.load(URL.createObjectURL(file), function (points) {
+			points.geometry.center();
+			points.geometry.rotateX(Math.PI);
+			points.name = 'user_selected_cloud.pcd';
+			scene.add(points);
+
+			const gui = new GUI();
+			gui.add(points.material, 'size', 0.001, 0.01).onChange(render);
+			gui.addColor(points.material, 'color').onChange(render);
+			gui.open();
+
 			render();
+			});
+		}
+		}
 
-			function init() {
+		function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+		renderer.setSize( window.innerWidth, window.innerHeight );
 
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				document.body.appendChild( renderer.domElement );
+		render();
+		}
 
-				scene = new THREE.Scene();
+		function render() {
+		renderer.render( scene, camera );
+		}
 
-				camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.01, 40 );
-				camera.position.set( 0, 0, 1 );
-				scene.add( camera );
-
-				const controls = new OrbitControls( camera, renderer.domElement );
-				controls.addEventListener( 'change', render ); // use if there is no animation loop
-				controls.minDistance = 0.5;
-				controls.maxDistance = 10;
-
-				//scene.add( new THREE.AxesHelper( 1 ) );
-
-				const loader = new PCDLoader();
-				loader.load( './models/pcd/binary/output_cloud.pcd', function ( points ) {
-
-					points.geometry.center();
-					points.geometry.rotateX( Math.PI );
-					points.name = 'output_cloud.pcd';
-					scene.add( points );
-
-					//
-
-					const gui = new GUI();
-
-					gui.add( points.material, 'size', 0.001, 0.01 ).onChange( render );
-					gui.addColor( points.material, 'color' ).onChange( render );
-					gui.open();
-
-					//
-
-					render();
-
-				} );
-
-				window.addEventListener( 'resize', onWindowResize );
-
-			}
-
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-				render();
-
-			}
-
-			function render() {
-
-				renderer.render( scene, camera );
-
-			}
-
-		</script>
-	</body>
+    </script>
+  </body>
 </html>
