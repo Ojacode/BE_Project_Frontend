@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>three.js webgl - XYZRGB</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="style.css">
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@v0.160.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@v0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <script type="module">
+
+      import * as THREE from 'https://threejs.org/build/three.module.js'; 
+      import { OrbitControls } from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
+      import { GUI } from 'https://threejs.org/examples/jsm/libs/lil-gui.module.min.js';
+
+      let camera, scene, renderer;
+
+      init();
+      render();
+
+      function init() {
+
+        renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        document.body.appendChild( renderer.domElement );
+
+        scene = new THREE.Scene();
+
+        camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.01, 40 );
+        camera.position.set( 0, 0, 1 );
+        scene.add( camera );
+
+        const controls = new OrbitControls( camera, renderer.domElement );
+        controls.addEventListener( 'change', render ); // use if there is no animation loop
+        controls.minDistance = 0.5;
+        controls.maxDistance = 10;
+
+        const loader = new THREE.FileLoader();
+        loader.load(
+          './inputs/output_1.txt',
+          function ( data ) {
+            const points = parseTextFile(data);
+            scene.add( points );
+
+            const gui = new GUI();
+            gui.addColor( points.material, 'color' ).onChange( render );
+            gui.open();
+
+            render();
+          },
+          undefined,
+          function ( err ) {
+            console.error( 'Error loading TXT file', err );
+          }
+        );
+
+        window.addEventListener( 'resize', onWindowResize );
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        render();
+      }
+
+      function render() {
+        renderer.render( scene, camera );
+      }
+
+      function parseTextFile(data) {
+        const geometry = new THREE.BufferGeometry();
+        const positions = [];
+        const colors = [];
+
+        const lines = data.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          const parts = lines[i].split(' ');
+          if (parts.length === 6) {
+            const x = parseFloat(parts[0]);
+            const y = parseFloat(parts[1]);
+            const z = parseFloat(parts[2]);
+            const r = parseInt(parts[3]) / 255;
+            const g = parseInt(parts[4]) / 255;
+            const b = parseInt(parts[5]) / 255;
+
+            positions.push(x, y, z);
+            colors.push(r, g, b);
+          }
+        }
+
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({ size: 0.01, vertexColors: THREE.VertexColors });
+        const points = new THREE.Points(geometry, material);
+
+        return points;
+      }
+
+    </script>
+  </body>
+</html>
