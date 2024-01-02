@@ -63,14 +63,13 @@
 				//scene.add( new THREE.AxesHelper( 1 ) );
 
 				const loader = new PCDLoader();
-				loader.load( './inputs/output_cloud.pcd', function ( points ) {
+				loader.load( './inputs/output_cloud_1.pcd', function ( points ) {
 
 					points.geometry.center();
 					points.geometry.rotateX( Math.PI );
 					points.name = 'output_cloud.pcd';
 					scene.add( points );
 
-					//
 
 					const gui = new GUI();
 
@@ -78,7 +77,6 @@
 					gui.addColor( points.material, 'color' ).onChange( render );
 					gui.open();
 
-					//
 
 					render();
 
